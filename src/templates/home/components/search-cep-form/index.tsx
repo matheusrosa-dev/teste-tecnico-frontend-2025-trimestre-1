@@ -5,7 +5,7 @@ import { resolver } from "./utils";
 import { MdOutlineSearch } from "react-icons/md";
 import { useState } from "react";
 import { toast } from "react-toastify";
-import { Spinner } from "../../../../components";
+import { Input, Spinner } from "../../../../components";
 import { useViaCEPServices } from "../../../../shared/services";
 import type { Address } from "../../types";
 
@@ -27,6 +27,8 @@ export function SearchCepForm({ afterSearch }: Props) {
     resolver,
     defaultValues: {
       cep: "",
+      displayName: "",
+      username: "",
     },
   });
 
@@ -34,14 +36,18 @@ export function SearchCepForm({ afterSearch }: Props) {
     setIsLoading(true);
 
     try {
-      const response = await getAddressByCEP(formData.cep);
+      const address = await getAddressByCEP(formData.cep);
 
-      if (response.erro) {
+      if (address.erro) {
         toast.warning("Endereço não encontrado");
         return;
       }
 
-      afterSearch(response);
+      afterSearch({
+        ...address,
+        username: formData.username,
+        displayName: formData.displayName,
+      });
     } catch {
       toast.error("Ocorreu um erro ao buscar o endereço");
     } finally {
@@ -52,6 +58,22 @@ export function SearchCepForm({ afterSearch }: Props) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 mb-4 gap-5">
+        <Input
+          disabled={isLoading}
+          placeholder="Nome de usuário"
+          hasError={!!errors.username}
+          {...register("username")}
+        />
+
+        <Input
+          disabled={isLoading}
+          placeholder="Nome de exibição"
+          hasError={!!errors.displayName}
+          {...register("displayName")}
+        />
+      </div>
+
       <div className="flex">
         <InputMask
           disabled={isLoading}

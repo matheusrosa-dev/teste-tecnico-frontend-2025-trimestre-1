@@ -15,10 +15,13 @@ export function HomeTemplate() {
   const [addressList, setAddressList] = useState<Address[]>(recoverAddressList);
 
   const afterSearch = (address: Address) => {
-    const alreadyExists = addressList.some((item) => item.cep === address.cep);
+    const alreadyExists = addressList.some(
+      (item) =>
+        item.cep === address.cep || item.displayName === address.displayName
+    );
 
     if (alreadyExists) {
-      toast.warning("Endereço já cadastrado");
+      toast.warning("CEP ou nome de exibição já cadastrado");
       return;
     }
 
@@ -31,6 +34,22 @@ export function HomeTemplate() {
     });
 
     toast.success("Endereço encontrado com sucesso!");
+  };
+
+  const onEdit = (address: Address) => {
+    setAddressList((prev) => {
+      const newValue = prev.map((item) => {
+        if (item.cep === address.cep) {
+          return address;
+        }
+
+        return item;
+      });
+
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newValue));
+
+      return newValue;
+    });
   };
 
   const onRemove = (cep: string) => {
@@ -63,7 +82,11 @@ export function HomeTemplate() {
           )}
 
           {addressList.length !== 0 && (
-            <AddressList data={addressList} onRemove={onRemove} />
+            <AddressList
+              data={addressList}
+              onRemove={onRemove}
+              onEdit={onEdit}
+            />
           )}
         </div>
       </div>

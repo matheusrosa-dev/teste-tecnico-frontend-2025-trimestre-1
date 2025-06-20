@@ -1,4 +1,6 @@
 export type Address = {
+  username: string;
+  displayName: string;
   cep: string;
   logradouro: string;
   complemento: string;

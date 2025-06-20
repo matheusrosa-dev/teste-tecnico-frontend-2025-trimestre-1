@@ -4,7 +4,6 @@ import * as yup from "yup";
 import type { Form } from "../types";
 
 export const schema = yup.object({
-  cep: yup.string().required().min(8),
   username: yup.string().required().trim(),
   displayName: yup.string().required().trim(),
 });
