@@ -75,7 +75,7 @@ export function HomeTemplate() {
         <SearchCepForm afterSearch={afterSearch} />
 
         <hr className="my-10 text-gray-200" />
-        <div>
+        <div className="mb-10">
           <h3 className="mb-5 text-center text-2xl font-medium">
             Endereços cadastrados
           </h3>
