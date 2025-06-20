@@ -1,11 +1,11 @@
-import { FiCheckCircle, FiEdit, FiTrash, FiX } from "react-icons/fi";
 import type { Address } from "../../types";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Input } from "../../../../components";
 import { useForm } from "react-hook-form";
 import type { Form } from "./types";
 import { resolver } from "./utils";
 import { toast } from "react-toastify";
+import { ActionButton, Filters, Td, Th } from "./components";
 
 type Props = {
   data: Address[];
@@ -15,6 +15,11 @@ type Props = {
 
 export function AddressList({ data, onRemove, onEdit }: Props) {
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
+  const [filters, setFilters] = useState({
+    username: "",
+    state: "",
+    city: "",
+  });
 
   const {
     register,
@@ -31,7 +36,7 @@ export function AddressList({ data, onRemove, onEdit }: Props) {
     },
   });
 
-  const onEditAddress = () => {
+  const onEditHandler = () => {
     const formData = getValues();
 
     const exibitionNameAlreadyExists = data.some(
@@ -45,165 +50,186 @@ export function AddressList({ data, onRemove, onEdit }: Props) {
       return;
     }
 
+    if (filters.username === editingAddress?.username) {
+      const addressOfUsername = data.filter(
+        (item) => item.username === editingAddress.username
+      );
+
+      if (addressOfUsername.length === 1) {
+        setFilters((prev) => ({ ...prev, username: "" }));
+      }
+    }
+
     setEditingAddress(null);
     onEdit({ ...editingAddress!, ...formData });
 
     reset();
   };
 
+  const onRemoveHandler = (address: Address) => {
+    if (filters.city === address.localidade) {
+      const addressOfCity = data.filter(
+        (item) => item.localidade === address.localidade
+      );
+
+      if (addressOfCity.length === 1) {
+        setFilters((prev) => ({ ...prev, city: "" }));
+      }
+    }
+
+    onRemove(address.cep);
+  };
+
+  const filteredData = useMemo(() => {
+    let filteredData = [...data];
+
+    if (filters.username) {
+      filteredData = filteredData.filter(
+        (address) => address.username === filters.username
+      );
+    }
+
+    if (filters.state) {
+      filteredData = filteredData.filter(
+        (address) => address.estado === filters.state
+      );
+    }
+
+    if (filters.city) {
+      filteredData = filteredData.filter(
+        (address) => address.localidade === filters.city
+      );
+    }
+
+    return filteredData;
+  }, [data, filters]);
+
   return (
-    <div className={`rounded-t-lg border border-gray-300 overflow-x-auto`}>
-      <table className="w-full border-collapse">
-        <thead>
-          <tr>
-            <Th>Nome de usuário</Th>
+    <div>
+      <Filters
+        data={data}
+        value={filters}
+        onChange={(value) => setFilters(value)}
+      />
 
-            <Th>Nome de exibição</Th>
+      {filteredData.length === 0 && (
+        <p className="text-center text-lg mt-20 text-red-400">
+          Nenhum endereço encontrado
+        </p>
+      )}
 
-            <Th>CEP</Th>
+      {filteredData.length > 0 && (
+        <div className="rounded-t-lg border border-gray-300 overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr>
+                <Th>Nome de usuário</Th>
 
-            <Th>UF</Th>
+                <Th>Nome de exibição</Th>
 
-            <Th>Estado</Th>
+                <Th>CEP</Th>
 
-            <Th>Cidade</Th>
+                <Th>UF</Th>
 
-            <Th>Bairro</Th>
+                <Th>Estado</Th>
 
-            <Th>Logradouro</Th>
+                <Th>Cidade</Th>
 
-            <Th></Th>
-          </tr>
-        </thead>
+                <Th>Bairro</Th>
 
-        <tbody>
-          {data.map((address) => {
-            const isEditing = editingAddress?.cep === address.cep;
+                <Th>Logradouro</Th>
 
-            return (
-              <tr key={address.cep}>
-                {isEditing && (
-                  <>
-                    <Td>
-                      <Input
-                        placeholder="Insira um nome de usuário"
-                        className="text-[1rem] text-center max-w-40"
-                        hasError={!!errors?.username}
-                        {...register("username")}
-                      />
-                    </Td>
-
-                    <Td>
-                      <Input
-                        placeholder="Insira um nome de exibição"
-                        className="text-[1rem] text-center max-w-40"
-                        hasError={!!errors?.displayName}
-                        {...register("displayName")}
-                      />
-                    </Td>
-                  </>
-                )}
-
-                {!isEditing && (
-                  <>
-                    <Td>{address.username}</Td>
-                    <Td>{address.displayName}</Td>
-                  </>
-                )}
-
-                <Td>{address.cep}</Td>
-                <Td>{address.uf}</Td>
-                <Td>{address.estado}</Td>
-                <Td>{address.localidade}</Td>
-                <Td>{address.bairro}</Td>
-                <Td>{address.logradouro}</Td>
-
-                <Td>
-                  {isEditing && (
-                    <>
-                      <ActionButton
-                        onClick={handleSubmit(onEditAddress)}
-                        variant="save"
-                      />
-
-                      <ActionButton
-                        variant="cancel"
-                        onClick={() => {
-                          setEditingAddress(null);
-
-                          reset();
-                        }}
-                      />
-                    </>
-                  )}
-
-                  {!isEditing && (
-                    <>
-                      <ActionButton
-                        variant="edit"
-                        onClick={() => {
-                          setEditingAddress(address);
-
-                          setValue("username", address.username);
-                          setValue("displayName", address.displayName);
-                        }}
-                      />
-
-                      <ActionButton
-                        onClick={() => onRemove(address.cep)}
-                        variant="remove"
-                      />
-                    </>
-                  )}
-                </Td>
+                <Th></Th>
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
+            </thead>
+
+            <tbody>
+              {filteredData.map((address) => {
+                const isEditing = editingAddress?.cep === address.cep;
+
+                return (
+                  <tr key={address.cep}>
+                    {isEditing && (
+                      <>
+                        <Td>
+                          <Input
+                            placeholder="Insira um nome de usuário"
+                            className="text-[1rem] text-center max-w-40"
+                            hasError={!!errors?.username}
+                            {...register("username")}
+                          />
+                        </Td>
+
+                        <Td>
+                          <Input
+                            placeholder="Insira um nome de exibição"
+                            className="text-[1rem] text-center max-w-40"
+                            hasError={!!errors?.displayName}
+                            {...register("displayName")}
+                          />
+                        </Td>
+                      </>
+                    )}
+
+                    {!isEditing && (
+                      <>
+                        <Td>{address.username}</Td>
+                        <Td>{address.displayName}</Td>
+                      </>
+                    )}
+
+                    <Td>{address.cep}</Td>
+                    <Td>{address.uf}</Td>
+                    <Td>{address.estado}</Td>
+                    <Td>{address.localidade}</Td>
+                    <Td>{address.bairro}</Td>
+                    <Td>{address.logradouro}</Td>
+
+                    <Td>
+                      {isEditing && (
+                        <>
+                          <ActionButton
+                            onClick={handleSubmit(onEditHandler)}
+                            variant="save"
+                          />
+
+                          <ActionButton
+                            variant="cancel"
+                            onClick={() => {
+                              setEditingAddress(null);
+
+                              reset();
+                            }}
+                          />
+                        </>
+                      )}
+
+                      {!isEditing && (
+                        <>
+                          <ActionButton
+                            variant="edit"
+                            onClick={() => {
+                              setEditingAddress(address);
+
+                              setValue("username", address.username);
+                              setValue("displayName", address.displayName);
+                            }}
+                          />
+
+                          <ActionButton
+                            onClick={() => onRemoveHandler(address)}
+                            variant="remove"
+                          />
+                        </>
+                      )}
+                    </Td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
-
-const Th = (props: { children?: React.ReactNode }) => (
-  <th
-    className={`text-[#6E6E76] font-normal bg-[#F8F8F8] py-[18px] px-[24px] min-w-30`}
-  >
-    {props.children}
-  </th>
-);
-
-const Td = (props: { children?: React.ReactNode }) => {
-  return (
-    <td className="text-center font-medium px-[24px] py-[18px]">
-      {props.children}
-    </td>
-  );
-};
-
-const ActionButton = (props: {
-  onClick: () => void;
-  variant: "edit" | "remove" | "save" | "cancel";
-}) => {
-  return (
-    <button
-      type="button"
-      onClick={props.onClick}
-      className="cursor-pointer mr-2"
-    >
-      {props.variant === "edit" && (
-        <FiEdit className="text-lg text-[#1f215c]" />
-      )}
-
-      {props.variant === "remove" && (
-        <FiTrash className="text-lg text-red-400" />
-      )}
-
-      {props.variant === "save" && (
-        <FiCheckCircle className="text-lg text-green-600" />
-      )}
-
-      {props.variant === "cancel" && <FiX className="text-lg text-red-400" />}
-    </button>
-  );
-};

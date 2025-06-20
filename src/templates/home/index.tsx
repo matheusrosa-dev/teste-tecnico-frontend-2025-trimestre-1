@@ -74,9 +74,14 @@ export function HomeTemplate() {
 
         <SearchCepForm afterSearch={afterSearch} />
 
-        <div className="mt-10">
+        <hr className="my-10 text-gray-200" />
+        <div>
+          <h3 className="mb-5 text-center text-2xl font-medium">
+            Endereços cadastrados
+          </h3>
+
           {addressList.length === 0 && (
-            <p className="text-center text-lg mt-20">
+            <p className="text-center text-lg mt-20 text-red-400">
               Nenhum endereço cadastrado
             </p>
           )}
