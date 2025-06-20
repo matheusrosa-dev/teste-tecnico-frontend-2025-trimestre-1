@@ -3,12 +3,17 @@ import { InputMask } from "@react-input/mask";
 import type { Form } from "./types";
 import { resolver } from "./utils";
 import { MdOutlineSearch } from "react-icons/md";
-import { useViaCEPServices } from "../../shared/services";
 import { useState } from "react";
-import { Spinner } from "../spinner";
 import { toast } from "react-toastify";
+import { Spinner } from "../../../../components";
+import { useViaCEPServices } from "../../../../shared/services";
+import type { Address } from "../../types";
 
-export function SearchCepForm() {
+type Props = {
+  afterSearch: (address: Address) => void;
+};
+
+export function SearchCepForm({ afterSearch }: Props) {
   const [isLoading, setIsLoading] = useState(false);
 
   const { getAddressByCEP } = useViaCEPServices();
@@ -17,6 +22,7 @@ export function SearchCepForm() {
     register,
     handleSubmit,
     formState: { errors },
+    reset,
   } = useForm<Form>({
     resolver,
     defaultValues: {
@@ -35,10 +41,11 @@ export function SearchCepForm() {
         return;
       }
 
-      toast.success("Endereço encontrado com sucesso!");
+      afterSearch(response);
     } catch {
       toast.error("Ocorreu um erro ao buscar o endereço");
     } finally {
+      reset();
       setIsLoading(false);
     }
   };
@@ -57,6 +64,7 @@ export function SearchCepForm() {
             }`}
           placeholder="Insira um CEP"
           mask="xxxxx-xxx"
+          inputMode="numeric"
           replacement={{ x: /\d/ }}
           {...register("cep")}
         />
